@@ -16,7 +16,14 @@ from flask import Flask, request, render_template
 from flask_httpauth import HTTPBasicAuth
 from flask_restx import Api, Resource, fields, reqparse, apidoc
 
-from support import init_state_machine, retrieveAllSms, deleteSms, encodeSms
+from support import (
+    acknowledgeRawSms,
+    deleteSms,
+    encodeSms,
+    init_state_machine,
+    retrieveAllSms,
+    retrieveRawSms,
+)
 from mqtt_publisher import MQTTPublisher
 from urc_filter import URCFilterProxy
 from gammu import GSMNetworks
@@ -400,6 +407,34 @@ sms_response = api.model('SMS Response', {
     'Text': fields.String(description='SMS message text', example='Hello World!')
 })
 
+raw_sms_response = api.model('Raw SMS Part', {
+    'Date': fields.String(description='Part timestamp'),
+    'Number': fields.String(description='Sender phone number'),
+    'SMSC': fields.String(description='SMS center number'),
+    'State': fields.String(description='SMS state'),
+    'Text': fields.String(description='Decoded text fragment'),
+    'Location': fields.Integer(description='Physical modem storage location'),
+    'Reference': fields.Integer(description='UDH concatenation reference', allow_null=True),
+    'ReferenceBits': fields.Integer(description='Reference width: 8 or 16', allow_null=True),
+    'PartNumber': fields.Integer(description='UDH sequence number'),
+    'PartsExpected': fields.Integer(description='UDH total part count'),
+    'Fingerprint': fields.String(description='Stable record fingerprint for safe ACK')
+})
+
+raw_ack_part = api.model('Raw SMS ACK Part', {
+    'Location': fields.Integer(required=True),
+    'Fingerprint': fields.String(required=True)
+})
+
+raw_ack_request = api.model('Raw SMS ACK Request', {
+    'Parts': fields.List(fields.Nested(raw_ack_part), required=True)
+})
+
+raw_ack_response = api.model('Raw SMS ACK Response', {
+    'Deleted': fields.List(fields.Integer),
+    'Mismatched': fields.List(fields.Raw)
+})
+
 signal_response = api.model('Signal Quality', {
     'SignalStrength': fields.Integer(description='Signal strength in dBm', example=-75),
     'SignalPercent': fields.Integer(description='Signal strength percentage', example=65),
@@ -557,6 +592,37 @@ class SmsCollection(Resource):
             else:
                 # Generic modem error
                 api.abort(503, f"Failed to send SMS: {error_msg}")
+
+@ns_sms.route('/raw')
+@ns_sms.doc('raw_sms_parts')
+class RawSmsCollection(Resource):
+    @ns_sms.doc('get_raw_sms_parts')
+    @ns_sms.marshal_list_with(raw_sms_response, code=200)
+    @ns_sms.doc(security='basicAuth')
+    @auth.login_required
+    def get(self):
+        """Get physical SMS records before gammu.LinkSMS"""
+        return mqtt_publisher.track_gammu_operation(
+            "retrieveRawSms", retrieveRawSms, machine
+        )
+
+@ns_sms.route('/raw/ack')
+@ns_sms.doc('ack_raw_sms_parts')
+class RawSmsAcknowledge(Resource):
+    @ns_sms.doc('ack_raw_sms_parts')
+    @ns_sms.expect(raw_ack_request, validate=True)
+    @ns_sms.marshal_with(raw_ack_response, code=200)
+    @ns_sms.doc(security='basicAuth')
+    @auth.login_required
+    def post(self):
+        """Delete exact persisted parts if location fingerprints still match"""
+        payload = request.get_json(silent=True) or {}
+        return mqtt_publisher.track_gammu_operation(
+            "acknowledgeRawSms",
+            acknowledgeRawSms,
+            machine,
+            payload.get('Parts', []),
+        )
 
 @ns_sms.route('/<int:id>')
 @ns_sms.doc('sms_by_id')

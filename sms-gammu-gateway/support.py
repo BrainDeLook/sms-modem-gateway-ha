@@ -9,6 +9,8 @@ Licensed under Apache License 2.0
 import sys
 import os
 import logging
+import hashlib
+import json
 import gammu
 
 
@@ -73,6 +75,109 @@ commtimeout = 40
         raise
         
     return sm
+
+
+def _physical_sms(machine):
+    """Read physical modem records without calling gammu.LinkSMS."""
+    status = machine.GetSMSStatus()
+    expected = status['SIMUsed'] + status['PhoneUsed'] + status['TemplatesUsed']
+    records = []
+    start = True
+    cursor = None
+    seen_locations = set()
+
+    while len(records) < expected:
+        if start:
+            batch = machine.GetNextSMS(Start=True, Folder=0)
+            start = False
+        else:
+            batch = machine.GetNextSMS(Location=cursor, Folder=0)
+        if not batch:
+            break
+        cursor = batch[0]['Location']
+        new_records = [
+            part for part in batch
+            if part.get('Location') not in seen_locations
+        ]
+        if not new_records:
+            break
+        records.extend(new_records)
+        seen_locations.update(part.get('Location') for part in new_records)
+    return records
+
+
+def _safe_text(value):
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')
+    return str(value or '')
+
+
+def _normalize_raw_part(part):
+    """Build a JSON-safe record and a stable acknowledge fingerprint."""
+    udh = part.get('UDH') or {}
+    id_16 = udh.get('ID16bit', -1)
+    id_8 = udh.get('ID8bit', -1)
+    if isinstance(id_16, int) and id_16 >= 0:
+        reference, reference_bits = id_16, 16
+    elif isinstance(id_8, int) and id_8 >= 0:
+        reference, reference_bits = id_8, 8
+    else:
+        reference, reference_bits = None, None
+
+    smsc = part.get('SMSC') or {}
+    result = {
+        'Date': str(part.get('DateTime') or ''),
+        'Number': _safe_text(part.get('Number')),
+        'SMSC': _safe_text(smsc.get('Number') if isinstance(smsc, dict) else smsc),
+        'State': _safe_text(part.get('State')),
+        'Text': _safe_text(part.get('Text')),
+        'Location': int(part.get('Location', -1)),
+        'Reference': reference,
+        'ReferenceBits': reference_bits,
+        'PartNumber': max(1, int(udh.get('PartNumber', 1) or 1)),
+        'PartsExpected': max(1, int(udh.get('AllParts', 1) or 1)),
+    }
+    fingerprint_payload = json.dumps(
+        result, sort_keys=True, ensure_ascii=False, separators=(',', ':')
+    ).encode('utf-8')
+    result['Fingerprint'] = hashlib.sha256(fingerprint_payload).hexdigest()
+    return result
+
+
+def retrieveRawSms(machine):
+    """Return every physical record with its UDH concatenation identity."""
+    return [_normalize_raw_part(part) for part in _physical_sms(machine)]
+
+
+def acknowledgeRawSms(machine, requested_parts):
+    """Delete only records whose current location fingerprint still matches."""
+    current = {part['Location']: part for part in retrieveRawSms(machine)}
+    deleted = []
+    mismatched = []
+    seen = set()
+
+    for requested in requested_parts or []:
+        try:
+            location = int(requested.get('Location'))
+        except (AttributeError, TypeError, ValueError):
+            mismatched.append({'Location': None, 'Reason': 'invalid_request'})
+            continue
+        if location in seen:
+            mismatched.append({'Location': location, 'Reason': 'duplicate_request'})
+            continue
+        seen.add(location)
+        expected_fingerprint = str(requested.get('Fingerprint') or '')
+        actual = current.get(location)
+        if actual is None:
+            mismatched.append({'Location': location, 'Reason': 'not_found'})
+            continue
+        if actual['Fingerprint'] != expected_fingerprint:
+            mismatched.append({'Location': location, 'Reason': 'fingerprint_changed'})
+            continue
+        machine.DeleteSMS(Folder=0, Location=location)
+        deleted.append(location)
+
+    return {'Deleted': deleted, 'Mismatched': mismatched}
 
 
 def retrieveAllSms(machine):
