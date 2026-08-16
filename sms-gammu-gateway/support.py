@@ -196,8 +196,18 @@ def _normalize_raw_part(part):
         'UDHType': _safe_text(udh.get('Type')),
         'UDHHex': raw_udh.hex(),
     }
+    # Reading an unread record can make the modem report it as Read on the
+    # verification pass. State is therefore mutable metadata, not part of the
+    # physical SMS identity. All content, sender, location and UDH fields stay
+    # protected by the fingerprint.
+    fingerprint_fields = {
+        key: value for key, value in result.items() if key != 'State'
+    }
     fingerprint_payload = json.dumps(
-        result, sort_keys=True, ensure_ascii=False, separators=(',', ':')
+        fingerprint_fields,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(',', ':'),
     ).encode('utf-8')
     result['Fingerprint'] = hashlib.sha256(fingerprint_payload).hexdigest()
     return result

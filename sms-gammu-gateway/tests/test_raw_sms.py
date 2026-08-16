@@ -131,6 +131,19 @@ class RawSmsTests(unittest.TestCase):
         self.assertEqual(result["Deleted"], [5])
         self.assertEqual(result["Mismatched"][0]["Location"], 8)
 
+    def test_ack_ignores_unread_to_read_state_transition(self) -> None:
+        item = record(5, "first")
+        machine = FakeMachine([item])
+        fingerprint = SUPPORT.retrieveRawSms(machine)[0]["Fingerprint"]
+        item["State"] = "Read"
+
+        result = SUPPORT.acknowledgeRawSms(machine, [
+            {"Location": 5, "Fingerprint": fingerprint},
+        ])
+
+        self.assertEqual(machine.deleted, [5])
+        self.assertEqual(result, {"Deleted": [5], "Mismatched": []})
+
     def test_ack_rejects_duplicate_location(self) -> None:
         machine = FakeMachine([record(5, "first")])
         fingerprint = SUPPORT.retrieveRawSms(machine)[0]["Fingerprint"]
