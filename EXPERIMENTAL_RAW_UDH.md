@@ -19,10 +19,12 @@ Before starting it:
 2. Copy the stable add-on configuration, including device, credentials and
    baud rate.
 3. Disable SMS monitoring, automatic deletion of read SMS, call monitoring
-   and MQTT consumption. These are disabled by default in `1.8.0-dev.2` but
+   and MQTT consumption. These are disabled by default in `1.8.0-dev.3` but
    verify the copied configuration. SMS Gammu Viewer must be the only message
    consumer.
-4. Keep API port `5000`, or update the integration host/port to match any
+4. Leave the URC filter disabled for Huawei modems. It targets noisy SIMCOM
+   voltage URCs and is not needed for the Huawei serial interface.
+5. Keep API port `5000`, or update the integration host/port to match any
    custom port mapping.
 
 Pair it with the integration branch:

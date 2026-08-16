@@ -1,6 +1,6 @@
 {
   "name": "SMS Gammu Gateway (Raw UDH Experiment)",
-  "version": "1.8.0-dev.2",
+  "version": "1.8.0-dev.3",
   "slug": "sms_gammu_gateway_raw",
   "description": "Experimental SMS gateway exposing physical UDH parts for conservative assembly. Do not run alongside the stable gateway on the same modem.",
   "startup": "services",
@@ -12,7 +12,7 @@
   "options": {
     "device_path": "/dev/ttyUSB0",
     "modem_baud_rate": "115200",
-    "urc_filter_enabled": true,
+    "urc_filter_enabled": false,
     "pin": "",
     "ssl": false,
     "username": "admin",

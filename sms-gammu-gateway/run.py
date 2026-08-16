@@ -145,11 +145,15 @@ urc_proxy = None
 if urc_filter_enabled:
     # Proxy potřebuje konkrétní rychlost reálného portu; pro 'auto' použij 115200.
     proxy_baud = 115200 if baud_rate == 'auto' else int(baud_rate)
+    candidate_proxy = URCFilterProxy(device_path, proxy_baud)
     try:
-        urc_proxy = URCFilterProxy(device_path, proxy_baud)
-        gammu_device = urc_proxy.start()
+        gammu_device = candidate_proxy.start()
+        urc_proxy = candidate_proxy
     except Exception as e:
         logging.error(f"⚠️ URC filter proxy failed to start ({e}); using device directly")
+        # start() can fail after opening the serial port or PTY. Release every
+        # partially acquired resource before Gammu opens the real device.
+        candidate_proxy.stop()
         urc_proxy = None
         gammu_device = device_path
 
@@ -602,9 +606,16 @@ class RawSmsCollection(Resource):
     @auth.login_required
     def get(self):
         """Get physical SMS records before gammu.LinkSMS"""
-        return mqtt_publisher.track_gammu_operation(
-            "retrieveRawSms", retrieveRawSms, machine
-        )
+        logging.info("RAW SMS GET started")
+        try:
+            result = mqtt_publisher.track_gammu_operation(
+                "retrieveRawSms", retrieveRawSms, machine
+            )
+            logging.info("RAW SMS GET completed: %d physical part(s)", len(result))
+            return result
+        except Exception:
+            logging.exception("RAW SMS GET failed")
+            raise
 
 @ns_sms.route('/raw/ack')
 @ns_sms.doc('ack_raw_sms_parts')
@@ -617,12 +628,24 @@ class RawSmsAcknowledge(Resource):
     def post(self):
         """Delete exact persisted parts if location fingerprints still match"""
         payload = request.get_json(silent=True) or {}
-        return mqtt_publisher.track_gammu_operation(
-            "acknowledgeRawSms",
-            acknowledgeRawSms,
-            machine,
-            payload.get('Parts', []),
-        )
+        parts = payload.get('Parts', [])
+        locations = [part.get('Location') for part in parts if isinstance(part, dict)]
+        logging.info("RAW SMS ACK started: locations=%s", locations)
+        try:
+            result = mqtt_publisher.track_gammu_operation(
+                "acknowledgeRawSms",
+                acknowledgeRawSms,
+                machine,
+                parts,
+            )
+            logging.info(
+                "RAW SMS ACK completed: deleted=%s mismatched=%s",
+                result.get('Deleted', []), result.get('Mismatched', []),
+            )
+            return result
+        except Exception:
+            logging.exception("RAW SMS ACK failed: locations=%s", locations)
+            raise
 
 @ns_sms.route('/<int:id>')
 @ns_sms.doc('sms_by_id')
