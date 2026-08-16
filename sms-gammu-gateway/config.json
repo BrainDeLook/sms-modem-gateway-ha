@@ -1,6 +1,6 @@
 {
   "name": "SMS Gammu Gateway (Raw UDH Experiment)",
-  "version": "1.8.0-dev.3",
+  "version": "1.8.0-dev.4",
   "slug": "sms_gammu_gateway_raw",
   "description": "Experimental SMS gateway exposing physical UDH parts for conservative assembly. Do not run alongside the stable gateway on the same modem.",
   "startup": "services",

@@ -112,17 +112,74 @@ def _safe_text(value):
     return str(value or '')
 
 
+def _raw_udh_bytes(udh):
+    value = (udh or {}).get('Text', b'')
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, bytearray):
+        return bytes(value)
+    if isinstance(value, (list, tuple)):
+        try:
+            return bytes(value)
+        except (TypeError, ValueError):
+            return b''
+    return b''
+
+
+def _concat_from_raw_udh(raw):
+    """Parse GSM/3GPP concat IEI 0x00 or 0x08 from arbitrary UDH."""
+    if not raw:
+        return None
+    # First octet is UDHL: number of following UDH octets.
+    end = min(len(raw), 1 + raw[0])
+    offset = 1
+    while offset + 2 <= end:
+        iei = raw[offset]
+        length = raw[offset + 1]
+        data_start = offset + 2
+        data_end = data_start + length
+        if data_end > end:
+            return None
+        data = raw[data_start:data_end]
+        if iei == 0x00 and length == 3:
+            reference, bits, total, sequence = data[0], 8, data[1], data[2]
+        elif iei == 0x08 and length == 4:
+            reference = (data[0] << 8) | data[1]
+            bits, total, sequence = 16, data[2], data[3]
+        else:
+            offset = data_end
+            continue
+        # Return even malformed values. The assembler must quarantine a
+        # recognized concat IE instead of misclassifying its fragment as a
+        # standalone SMS.
+        return reference, bits, total, sequence
+    return None
+
+
 def _normalize_raw_part(part):
     """Build a JSON-safe record and a stable acknowledge fingerprint."""
     udh = part.get('UDH') or {}
+    raw_udh = _raw_udh_bytes(udh)
     id_16 = udh.get('ID16bit', -1)
     id_8 = udh.get('ID8bit', -1)
+    total = int(udh.get('AllParts', -1) or -1)
+    sequence = int(udh.get('PartNumber', -1) or -1)
     if isinstance(id_16, int) and id_16 >= 0:
         reference, reference_bits = id_16, 16
     elif isinstance(id_8, int) and id_8 >= 0:
         reference, reference_bits = id_8, 8
     else:
         reference, reference_bits = None, None
+
+    # Combined/unknown UDH can be reported as UserUDH with the convenience
+    # fields left at -1. The standards-defined IE is still present in Text.
+    if reference is None or total < 2 or not (1 <= sequence <= total):
+        parsed_concat = _concat_from_raw_udh(raw_udh)
+        if parsed_concat is not None:
+            reference, reference_bits, total, sequence = parsed_concat
+
+    if reference is None:
+        total, sequence = 1, 1
 
     smsc = part.get('SMSC') or {}
     result = {
@@ -134,8 +191,10 @@ def _normalize_raw_part(part):
         'Location': int(part.get('Location', -1)),
         'Reference': reference,
         'ReferenceBits': reference_bits,
-        'PartNumber': max(1, int(udh.get('PartNumber', 1) or 1)),
-        'PartsExpected': max(1, int(udh.get('AllParts', 1) or 1)),
+        'PartNumber': sequence,
+        'PartsExpected': total,
+        'UDHType': _safe_text(udh.get('Type')),
+        'UDHHex': raw_udh.hex(),
     }
     fingerprint_payload = json.dumps(
         result, sort_keys=True, ensure_ascii=False, separators=(',', ':')

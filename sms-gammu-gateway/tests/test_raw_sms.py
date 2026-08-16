@@ -68,7 +68,57 @@ class RawSmsTests(unittest.TestCase):
         self.assertEqual([item["PartNumber"] for item in result], [1, 2])
         self.assertEqual(result[0]["Reference"], 42)
         self.assertEqual(result[0]["ReferenceBits"], 8)
+        self.assertEqual(result[0]["UDHType"], "")
         self.assertEqual(len(result[0]["Fingerprint"]), 64)
+
+    def test_falls_back_to_raw_8bit_concat_ie_in_combined_udh(self) -> None:
+        item = record(5, "part")
+        item["UDH"] = {
+            "Type": "UserUDH",
+            "ID8bit": -1,
+            "ID16bit": -1,
+            "PartNumber": -1,
+            "AllParts": -1,
+            # Port addressing IE followed by concat IE: ref=42, 3 parts, part 2.
+            "Text": bytes.fromhex("0b05040b8423f000032a0302"),
+        }
+        result = SUPPORT._normalize_raw_part(item)
+        self.assertEqual(result["Reference"], 42)
+        self.assertEqual(result["ReferenceBits"], 8)
+        self.assertEqual(result["PartsExpected"], 3)
+        self.assertEqual(result["PartNumber"], 2)
+        self.assertEqual(result["UDHHex"], "0b05040b8423f000032a0302")
+
+    def test_falls_back_to_raw_16bit_concat_ie(self) -> None:
+        item = record(7, "part")
+        item["UDH"] = {
+            "Type": "UserUDH",
+            "ID8bit": -1,
+            "ID16bit": -1,
+            "PartNumber": -1,
+            "AllParts": -1,
+            "Text": bytes.fromhex("06080412340403"),
+        }
+        result = SUPPORT._normalize_raw_part(item)
+        self.assertEqual(result["Reference"], 0x1234)
+        self.assertEqual(result["ReferenceBits"], 16)
+        self.assertEqual(result["PartsExpected"], 4)
+        self.assertEqual(result["PartNumber"], 3)
+
+    def test_rejects_invalid_raw_concat_sequence(self) -> None:
+        item = record(9, "part")
+        item["UDH"] = {
+            "Type": "UserUDH",
+            "ID8bit": -1,
+            "ID16bit": -1,
+            "PartNumber": -1,
+            "AllParts": -1,
+            "Text": bytes.fromhex("0500032a0304"),
+        }
+        result = SUPPORT._normalize_raw_part(item)
+        self.assertEqual(result["Reference"], 42)
+        self.assertEqual(result["PartsExpected"], 3)
+        self.assertEqual(result["PartNumber"], 4)
 
     def test_ack_deletes_only_matching_fingerprints(self) -> None:
         machine = FakeMachine([record(5, "first"), record(8, "second")])

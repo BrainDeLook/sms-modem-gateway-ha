@@ -422,6 +422,8 @@ raw_sms_response = api.model('Raw SMS Part', {
     'ReferenceBits': fields.Integer(description='Reference width: 8 or 16', allow_null=True),
     'PartNumber': fields.Integer(description='UDH sequence number'),
     'PartsExpected': fields.Integer(description='UDH total part count'),
+    'UDHType': fields.String(description='Gammu UDH classification'),
+    'UDHHex': fields.String(description='Raw UDH bytes in hexadecimal'),
     'Fingerprint': fields.String(description='Stable record fingerprint for safe ACK')
 })
 
@@ -612,6 +614,15 @@ class RawSmsCollection(Resource):
                 "retrieveRawSms", retrieveRawSms, machine
             )
             logging.info("RAW SMS GET completed: %d physical part(s)", len(result))
+            for part in result:
+                logging.info(
+                    "RAW SMS PART location=%s sender=%s udh_type=%s "
+                    "reference=%s/%s part=%s/%s udh_hex=%s",
+                    part.get('Location'), part.get('Number'), part.get('UDHType'),
+                    part.get('Reference'), part.get('ReferenceBits'),
+                    part.get('PartNumber'), part.get('PartsExpected'),
+                    part.get('UDHHex'),
+                )
             return result
         except Exception:
             logging.exception("RAW SMS GET failed")
