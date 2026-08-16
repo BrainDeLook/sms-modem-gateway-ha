@@ -17,7 +17,7 @@ from lean_store import MessageStore
 from support import init_state_machine
 
 
-VERSION = "0.1.0-dev.1"
+VERSION = "0.1.0-dev.2"
 OPTIONS_PATH = Path("/data/options.json")
 DATABASE_PATH = Path("/data/messages.db")
 
@@ -97,6 +97,7 @@ def messages():
 def acknowledge(message_id: str):
     if not store.acknowledge(message_id):
         return jsonify(error="message_not_found"), 404
+    logging.info("Queue ACK completed: id=%s", message_id[:12])
     return jsonify(acknowledged=True, id=message_id)
 
 

@@ -50,7 +50,7 @@ LABEL \
     io.hass.name="SMS Modem Gateway (Lean Experiment)" \
     io.hass.description="Minimal durable REST gateway for USB GSM modems" \
     io.hass.type="addon" \
-    io.hass.version="0.1.0-dev.1" \
+    io.hass.version="0.1.0-dev.2" \
     maintainer="BrainDeLook"
 
 # Run
