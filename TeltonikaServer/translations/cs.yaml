@@ -1,7 +1,0 @@
-configuration:
-  tcp_port:
-    name: "TCP Port"
-    description: "Port pro příjem dat z Teltonika GPS zařízení"
-  web_port:
-    name: "Port webového rozhraní"
-    description: "Port pro přístup k webovému rozhraní pro zobrazování logů"

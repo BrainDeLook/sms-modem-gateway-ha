@@ -1,7 +1,0 @@
-configuration:
-  tcp_port:
-    name: "TCP Port"
-    description: "Port for receiving data from Teltonika GPS devices"
-  web_port:
-    name: "Web Interface Port"
-    description: "Port for accessing the web log viewer interface"

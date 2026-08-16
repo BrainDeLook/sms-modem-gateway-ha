@@ -1,4 +1,4 @@
 # https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: BrainDeLook Lean SMS experiments
-url: 'https://github.com/BrainDeLook/home-assistant-addons-ru/tree/experiment/lean-rest-engine'
+name: BrainDeLook SMS Modem Gateway
+url: 'https://github.com/BrainDeLook/sms-modem-gateway-ha'
 maintainer: BrainDeLook

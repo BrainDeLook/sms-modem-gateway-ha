@@ -1,13 +1,13 @@
 {
   "name": "SMS Modem Gateway (Lean Experiment)",
-  "version": "0.1.0-dev.2",
+  "version": "0.1.0-dev.3",
   "slug": "sms_modem_gateway_lean",
   "description": "Minimal REST SMS and voice gateway with durable multipart assembly",
   "startup": "services",
   "arch": ["amd64", "i386", "aarch64", "armv7", "armhf"],
   "boot": "auto",
   "panel_icon": "mdi:cellphone-message",
-  "url": "https://github.com/BrainDeLook/home-assistant-addons-ru/tree/experiment/lean-rest-engine/sms-gammu-gateway",
+  "url": "https://github.com/BrainDeLook/sms-modem-gateway-ha/tree/main/sms-modem-gateway",
   "homeassistant": "2024.1.0",
   "options": {
     "device_path": "/dev/ttyUSB0",

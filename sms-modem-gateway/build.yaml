@@ -7,7 +7,7 @@ build_from:
 labels:
   org.opencontainers.image.title: "SMS Modem Gateway (Lean Experiment)"
   org.opencontainers.image.description: "Minimal durable REST gateway for USB GSM modems"
-  org.opencontainers.image.source: "https://github.com/BrainDeLook/home-assistant-addons-ru"
+  org.opencontainers.image.source: "https://github.com/BrainDeLook/sms-modem-gateway-ha"
   org.opencontainers.image.authors: "BrainDeLook"
   org.opencontainers.image.licenses: "Apache-2.0"
 args:
