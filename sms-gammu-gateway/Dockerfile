@@ -29,10 +29,11 @@ COPY requirements.txt .
 RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 
 # Copy application files
-COPY run.py .
 COPY support.py .
-COPY urc_filter.py .
-COPY mqtt_publisher.py .
+COPY lean_assembler.py .
+COPY lean_engine.py .
+COPY lean_run.py .
+COPY lean_store.py .
 COPY config.json .
 COPY run.sh .
 COPY icon.png .
@@ -46,11 +47,11 @@ EXPOSE 5000
 
 # Labels
 LABEL \
-    io.hass.name="SMS Gammu Gateway" \
-    io.hass.description="REST API SMS Gateway using python-gammu for USB GSM modems" \
+    io.hass.name="SMS Modem Gateway (Lean Experiment)" \
+    io.hass.description="Minimal durable REST gateway for USB GSM modems" \
     io.hass.type="addon" \
-    io.hass.version="1.2.9" \
-    maintainer="PavelVe"
+    io.hass.version="0.1.0-dev.1" \
+    maintainer="BrainDeLook"
 
 # Run
 CMD [ "./run.sh" ]

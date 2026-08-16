@@ -1,4 +1,4 @@
 # https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: BrainDeLook Raw UDH experiments
-url: 'https://github.com/BrainDeLook/home-assistant-addons-ru/tree/experiment/raw-udh-api'
+name: BrainDeLook Lean SMS experiments
+url: 'https://github.com/BrainDeLook/home-assistant-addons-ru/tree/experiment/lean-rest-engine'
 maintainer: BrainDeLook

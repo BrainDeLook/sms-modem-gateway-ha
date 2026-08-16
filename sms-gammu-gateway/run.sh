@@ -16,4 +16,4 @@ fi
 cd /app
 
 # Start the application (unbuffered output for real-time logs)
-exec python3 -u run.py
+exec python3 -u lean_run.py
