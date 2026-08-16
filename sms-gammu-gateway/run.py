@@ -632,14 +632,29 @@ class RawSmsCollection(Resource):
 @ns_sms.doc('ack_raw_sms_parts')
 class RawSmsAcknowledge(Resource):
     @ns_sms.doc('ack_raw_sms_parts')
-    @ns_sms.expect(raw_ack_request, validate=True)
+    # Keep the model for Swagger, but validate inside the handler. Some
+    # Flask-RESTX versions can terminate a malformed/closed POST while schema
+    # validation is still running, before our diagnostics are emitted.
+    @ns_sms.expect(raw_ack_request)
     @ns_sms.marshal_with(raw_ack_response, code=200)
     @ns_sms.doc(security='basicAuth')
     @auth.login_required
     def post(self):
         """Delete exact persisted parts if location fingerprints still match"""
         payload = request.get_json(silent=True) or {}
-        parts = payload.get('Parts', [])
+        parts = payload.get('Parts') if isinstance(payload, dict) else None
+        if not isinstance(parts, list) or not parts:
+            logging.warning("RAW SMS ACK rejected: missing Parts list")
+            api.abort(400, "Parts must be a non-empty list")
+        if any(
+            not isinstance(part, dict)
+            or not isinstance(part.get('Location'), int)
+            or not isinstance(part.get('Fingerprint'), str)
+            or not part.get('Fingerprint')
+            for part in parts
+        ):
+            logging.warning("RAW SMS ACK rejected: invalid part descriptor")
+            api.abort(400, "Each part needs integer Location and Fingerprint")
         locations = [part.get('Location') for part in parts if isinstance(part, dict)]
         logging.info("RAW SMS ACK started: locations=%s", locations)
         try:
