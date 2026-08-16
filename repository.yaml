@@ -1,4 +1,4 @@
 # https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: Pavel's Home Assistant add-on repository
-url: 'https://github.com/PavelVe/home-assistant-addons'
-maintainer: PavelVe <vejnar.p@gmail.com>
+name: BrainDeLook Raw UDH experiments
+url: 'https://github.com/BrainDeLook/home-assistant-addons-ru/tree/experiment/raw-udh-api'
+maintainer: BrainDeLook

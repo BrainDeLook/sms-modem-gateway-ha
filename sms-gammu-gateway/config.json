@@ -1,13 +1,13 @@
 {
-  "name": "SMS Gammu Gateway",
-  "version": "1.7.1",
-  "slug": "sms_gammu_gateway",
-  "description": "SMS gateway for USB GSM modems with REST API, MQTT integration and Home Assistant auto-discovery. Developed and tested with SIM800L; other modems may work but are community-supported. Send/receive SMS, Flash SMS support, signal and network monitoring, incoming and missed call detection, SMS cost tracking. Web UI with Swagger documentation.",
+  "name": "SMS Gammu Gateway (Raw UDH Experiment)",
+  "version": "1.8.0-dev.1",
+  "slug": "sms_gammu_gateway_raw",
+  "description": "Experimental SMS gateway exposing physical UDH parts for conservative assembly. Do not run alongside the stable gateway on the same modem.",
   "startup": "services",
   "arch": ["amd64", "i386", "aarch64", "armv7", "armhf"],
   "boot": "auto",
   "panel_icon": "mdi:cellphone-message",
-  "url": "https://github.com/PavelVe/home-assistant-addons/blob/main/sms-gammu-gateway/README.md",
+  "url": "https://github.com/BrainDeLook/home-assistant-addons-ru/tree/experiment/raw-udh-api/sms-gammu-gateway",
   "homeassistant": "2022.1.1",
   "options": {
     "device_path": "/dev/ttyUSB0",
