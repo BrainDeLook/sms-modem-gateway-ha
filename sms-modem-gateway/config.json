@@ -1,6 +1,6 @@
 {
   "name": "SMS Modem Gateway (Lean Experiment)",
-  "version": "0.1.0-dev.7",
+  "version": "0.1.0-dev.8",
   "slug": "sms_modem_gateway_lean",
   "description": "Minimal REST SMS gateway with durable multipart assembly",
   "startup": "services",
