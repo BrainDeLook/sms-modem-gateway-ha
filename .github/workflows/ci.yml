@@ -1,0 +1,36 @@
+name: Validate add-on
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Compile sources
+        run: python -m compileall -q sms-modem-gateway
+      - name: Run unit tests
+        working-directory: sms-modem-gateway
+        run: python -m unittest discover -s tests -v
+
+  addon-lint:
+    name: Home Assistant add-on configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Run add-on linter
+        uses: frenck/action-addon-linter@v2
+        with:
+          path: ./sms-modem-gateway
