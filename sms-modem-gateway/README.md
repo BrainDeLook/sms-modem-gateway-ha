@@ -11,9 +11,11 @@ Current features:
 - crash-safe physical cleanup journal;
 - incoming and outgoing SMS REST API;
 - signal, network, SIM and modem status;
-- outgoing dial and hangup REST endpoints;
 - HTTP Basic authentication;
 - production Waitress HTTP server;
 - no MQTT dependency.
+
+Voice calls are handled directly by SMS Gammu Viewer through a separate modem
+serial port and are intentionally not exposed by this SMS gateway.
 
 See [LEAN_API.md](LEAN_API.md) for the REST endpoints.

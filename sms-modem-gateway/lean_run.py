@@ -17,7 +17,7 @@ from lean_store import MessageStore
 from support import init_state_machine
 
 
-VERSION = "0.1.0-dev.4"
+VERSION = "0.1.0-dev.5"
 OPTIONS_PATH = Path("/data/options.json")
 DATABASE_PATH = Path("/data/messages.db")
 
@@ -30,7 +30,6 @@ def load_options() -> dict[str, Any]:
         "username": "admin",
         "password": "password",
         "poll_interval": 10,
-        "voice_call_enabled": False,
         "message_retention_days": 30,
     }
     if OPTIONS_PATH.exists():
@@ -139,34 +138,6 @@ def modem():
         return jsonify(engine.modem_info())
     except Exception as error:
         return jsonify(error=str(error)), 503
-
-
-@app.post("/v1/calls/dial")
-@auth.login_required
-def dial():
-    if not options.get("voice_call_enabled", False):
-        return jsonify(error="voice_calls_disabled"), 403
-    payload = request.get_json(silent=True) or {}
-    number = str(payload.get("number") or "").strip()
-    if not number:
-        return jsonify(error="number_is_required"), 400
-    try:
-        engine.dial(number)
-    except Exception as error:
-        return jsonify(error="dial_failed", detail=str(error)), 503
-    return jsonify(dialing=True, number=number)
-
-
-@app.post("/v1/calls/hangup")
-@auth.login_required
-def hangup():
-    if not options.get("voice_call_enabled", False):
-        return jsonify(error="voice_calls_disabled"), 403
-    try:
-        engine.hangup()
-    except Exception as error:
-        return jsonify(error="hangup_failed", detail=str(error)), 503
-    return jsonify(hung_up=True)
 
 
 @app.post("/v1/poll")

@@ -174,11 +174,3 @@ class ModemEngine:
                 "model": self.machine.GetModel(),
                 "imsi": self.machine.GetSIMIMSI(),
             }
-
-    def dial(self, number: str) -> None:
-        with self._lock:
-            self.machine.DialVoice(number)
-
-    def hangup(self) -> None:
-        with self._lock:
-            self.machine.CancelCall(0, True)

@@ -1,8 +1,8 @@
 {
   "name": "SMS Modem Gateway (Lean Experiment)",
-  "version": "0.1.0-dev.4",
+  "version": "0.1.0-dev.5",
   "slug": "sms_modem_gateway_lean",
-  "description": "Minimal REST SMS and voice gateway with durable multipart assembly",
+  "description": "Minimal REST SMS gateway with durable multipart assembly",
   "startup": "services",
   "arch": ["amd64", "aarch64"],
   "panel_icon": "mdi:cellphone-message",
@@ -15,7 +15,6 @@
     "username": "admin",
     "password": "password",
     "poll_interval": 10,
-    "voice_call_enabled": false,
     "message_retention_days": 30
   },
   "schema": {
@@ -25,7 +24,6 @@
     "username": "str",
     "password": "password",
     "poll_interval": "int(5,300)",
-    "voice_call_enabled": "bool",
     "message_retention_days": "int(1,365)"
   },
   "ingress": true,

@@ -17,9 +17,6 @@ configuration:
   poll_interval:
     name: Интервал проверки SMS
     description: Интервал между проверками физических сообщений в секундах
-  voice_call_enabled:
-    name: Голосовые звонки
-    description: Разрешить REST API набирать номер и завершать звонок
   message_retention_days:
     name: Хранение очереди
     description: Сколько дней хранить подтверждённые сообщения для дедупликации

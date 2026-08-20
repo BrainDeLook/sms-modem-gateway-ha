@@ -17,9 +17,6 @@ configuration:
   poll_interval:
     name: SMS poll interval
     description: Seconds between physical modem checks
-  voice_call_enabled:
-    name: Voice calls
-    description: Allow REST endpoints to dial and hang up calls
   message_retention_days:
     name: Queue retention
     description: Days to retain acknowledged messages for deduplication
