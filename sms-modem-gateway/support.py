@@ -126,11 +126,24 @@ def _normalize_raw_part(part: dict[str, Any]) -> dict[str, Any]:
     else:
         reference, bits = None, None
 
-    if reference is None or total < 2 or not 1 <= sequence <= total:
-        parsed = _concat_from_raw_udh(raw_udh)
-        if parsed is not None:
-            reference, bits, total, sequence = parsed
-    if reference is None:
+    # Gammu иногда заполняет ID8bit даже у одиночной SMS со служебным UDH
+    # (например, application-port addressing). Такой ID нельзя считать
+    # concat Reference без валидных PartsExpected/PartNumber. Сырой UDH,
+    # наоборот, является источником истины и может исправить неполное поле
+    # UDH, которое вернул драйвер.
+    metadata_is_concat = (
+        reference is not None
+        and bits in (8, 16)
+        and total >= 2
+        and 1 <= sequence <= total
+    )
+    parsed = _concat_from_raw_udh(raw_udh)
+    if parsed is not None:
+        reference, bits, total, sequence = parsed
+    elif not metadata_is_concat:
+        # Это обычная одиночная SMS. Сбрасываем фиктивный Reference ID,
+        # чтобы сборщик не отправлял её в ambiguous/quarantine.
+        reference, bits = None, None
         total, sequence = 1, 1
 
     smsc = part.get("SMSC") or {}

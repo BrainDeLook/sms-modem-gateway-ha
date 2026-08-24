@@ -120,6 +120,23 @@ class RawSmsTests(unittest.TestCase):
         self.assertEqual(result["PartsExpected"], 3)
         self.assertEqual(result["PartNumber"], 4)
 
+    def test_treats_service_udh_with_spurious_reference_as_single_sms(self) -> None:
+        item = record(11, "single provider message")
+        item["UDH"] = {
+            "Type": "UserUDH",
+            "ID8bit": 42,
+            "ID16bit": -1,
+            "PartNumber": -1,
+            "AllParts": -1,
+            # Application-port addressing IE; no concatenation IE is present.
+            "Text": bytes.fromhex("050403158101"),
+        }
+        result = SUPPORT._normalize_raw_part(item)
+        self.assertIsNone(result["Reference"])
+        self.assertIsNone(result["ReferenceBits"])
+        self.assertEqual(result["PartsExpected"], 1)
+        self.assertEqual(result["PartNumber"], 1)
+
     def test_ack_deletes_only_matching_fingerprints(self) -> None:
         machine = FakeMachine([record(5, "first"), record(8, "second")])
         current = SUPPORT.retrieveRawSms(machine)
