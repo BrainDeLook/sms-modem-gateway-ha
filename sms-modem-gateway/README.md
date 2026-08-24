@@ -1,8 +1,8 @@
-# SMS Modem Gateway (Lean Experiment)
+# SMS Modem Gateway
 
-Minimal Home Assistant add-on for receiving and sending SMS through a USB GSM
-modem. Complete messages are persisted in `/data/messages.db` before their
-physical SIM records are removed.
+Home Assistant add-on for receiving and sending SMS through a USB GSM modem.
+Complete messages are persisted in `/data/messages.db` before their physical
+SIM records are removed.
 
 Current features:
 
@@ -18,4 +18,5 @@ Current features:
 Voice calls are handled directly by SMS Gammu Viewer through a separate modem
 serial port and are intentionally not exposed by this SMS gateway.
 
-See [LEAN_API.md](LEAN_API.md) for the REST endpoints.
+See [LEAN_API.md](LEAN_API.md) for the REST endpoints. The API is intentionally
+small and is consumed by [SMS Gammu Viewer](https://github.com/BrainDeLook/sms-gammu-viewer-ha).

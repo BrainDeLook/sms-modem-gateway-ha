@@ -1,8 +1,8 @@
 # SMS Modem Gateway for Home Assistant
 
-Experimental minimal add-on for USB GSM modems. It uses `python-gammu` only as
-the modem driver and implements multipart UDH assembly, durable delivery and
-the REST contract in its own code.
+Reliable minimal add-on for USB GSM modems. It uses `python-gammu` only as the
+modem driver and implements multipart UDH assembly, durable delivery and the
+REST contract in its own code.
 
 ## Installation
 
@@ -12,11 +12,11 @@ Add this repository to **Settings → Add-ons → Add-on Store → Repositories*
 https://github.com/BrainDeLook/sms-modem-gateway-ha
 ```
 
-Install **SMS Modem Gateway (Lean Experiment)**. Do not run another gateway
+Install **SMS Modem Gateway**. Do not run another gateway
 against the same serial device at the same time.
 
-The matching Home Assistant integration prerelease is
-[`v3.16.0b2`](https://github.com/BrainDeLook/sms-gammu-viewer-ha/releases/tag/v3.16.0b2).
+Then install [SMS Gammu Viewer](https://github.com/BrainDeLook/sms-gammu-viewer-ha)
+through HACS and configure it to use the add-on REST API on port `5000`.
 
 ## Reliability model
 
@@ -27,4 +27,5 @@ The matching Home Assistant integration prerelease is
 5. Delete only modem records whose location fingerprint still matches.
 6. Deliver the logical message through a durable ID-based REST queue.
 
-MQTT is intentionally not included.
+MQTT is intentionally not included. Voice calls are handled directly by the
+integration through a separate modem serial port.

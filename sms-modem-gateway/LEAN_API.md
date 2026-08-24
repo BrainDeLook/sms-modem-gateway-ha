@@ -1,4 +1,4 @@
-# SMS Modem Gateway — experimental API
+# SMS Modem Gateway REST API
 
 This branch is intentionally independent from the stable add-on. Never run
 both add-ons against the same serial device.

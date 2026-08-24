@@ -1,8 +1,8 @@
 {
-  "name": "SMS Modem Gateway (Lean Experiment)",
-  "version": "0.1.0-dev.9",
+  "name": "SMS Modem Gateway",
+  "version": "0.1.0",
   "slug": "sms_modem_gateway_lean",
-  "description": "Minimal REST SMS gateway with durable multipart assembly",
+  "description": "Reliable REST SMS gateway with durable multipart assembly",
   "startup": "services",
   "arch": ["amd64", "aarch64"],
   "panel_icon": "mdi:cellphone-message",

@@ -2,7 +2,7 @@ build_from:
   aarch64: ghcr.io/home-assistant/aarch64-base:3.19
   amd64: ghcr.io/home-assistant/amd64-base:3.19
 labels:
-  org.opencontainers.image.title: "SMS Modem Gateway (Lean Experiment)"
+  org.opencontainers.image.title: "SMS Modem Gateway"
   org.opencontainers.image.description: "Minimal durable REST gateway for USB GSM modems"
   org.opencontainers.image.source: "https://github.com/BrainDeLook/sms-modem-gateway-ha"
   org.opencontainers.image.authors: "BrainDeLook"
