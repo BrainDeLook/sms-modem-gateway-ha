@@ -13,6 +13,21 @@ from lean_store import MessageStore
 from support import acknowledgeRawSms, retrieveRawSms
 
 
+def _resolve_network_name(network: Any) -> Any:
+    """Use Gammu's MCC/MNC database when the modem omits its network name."""
+    if not isinstance(network, dict) or str(network.get("NetworkName") or "").strip():
+        return network
+
+    code = str(network.get("NetworkCode") or "").strip()
+    digits = "".join(character for character in code if character.isdigit())
+    if len(digits) in (5, 6) and all(
+        character.isdigit() or character.isspace() for character in code
+    ):
+        code = f"{digits[:3]} {digits[3:]}"
+    name = getattr(gammu, "GSMNetworks", {}).get(code)
+    return {**network, "NetworkName": name} if name else network
+
+
 class ModemEngine:
     def __init__(
         self,
@@ -152,7 +167,7 @@ class ModemEngine:
     def status(self) -> dict[str, Any]:
         with self._lock:
             signal = self.machine.GetSignalQuality()
-            network = self.machine.GetNetworkInfo()
+            network = _resolve_network_name(self.machine.GetNetworkInfo())
             capacity = self.machine.GetSMSStatus()
         return {
             "online": True,

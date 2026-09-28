@@ -6,6 +6,7 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest.mock import patch
 
 sys.modules.setdefault("gammu", types.ModuleType("gammu"))
 
@@ -41,6 +42,12 @@ class FakeMachine:
 
     def GetSMSStatus(self) -> dict:
         return {"SIMUsed": len(self.records), "PhoneUsed": 0, "TemplatesUsed": 0}
+
+    def GetSignalQuality(self) -> dict:
+        return {"SignalPercent": 75}
+
+    def GetNetworkInfo(self) -> dict:
+        return self.network
 
     def GetNextSMS(self, **kwargs) -> list[dict]:
         if kwargs.get("Start"):
@@ -155,6 +162,36 @@ class LeanStoreAndEngineTests(unittest.TestCase):
         self.assertEqual(machine.deleted, [1, 2, 3])
         self.assertEqual(result["physical"], 0)
         self.assertEqual(self.store.counts()["physical_cleanup"], 0)
+
+    def test_status_resolves_missing_operator_from_gammu_networks(self) -> None:
+        machine = FakeMachine([])
+        machine.network = {"NetworkName": "", "NetworkCode": "250 99", "State": "HomeNetwork"}
+        with patch.object(sys.modules["gammu"], "GSMNetworks", {"250 99": "Beeline"}, create=True):
+            status = ModemEngine(machine, self.store).status()
+        self.assertEqual(status["network"]["NetworkName"], "Beeline")
+        self.assertEqual(status["network"]["State"], "HomeNetwork")
+        self.assertEqual(machine.network["NetworkName"], "")
+
+    def test_status_preserves_modem_name_and_unknown_code(self) -> None:
+        machine = FakeMachine([])
+        with patch.object(
+            sys.modules["gammu"], "GSMNetworks",
+            {"250 99": "Beeline", "250 01": "MTS"}, create=True,
+        ):
+            machine.network = {"NetworkName": "Operator from modem", "NetworkCode": "25099"}
+            self.assertEqual(ModemEngine(machine, self.store).status()["network"], machine.network)
+            machine.network = {"NetworkName": "", "NetworkCode": "25002"}
+            self.assertEqual(ModemEngine(machine, self.store).status()["network"], machine.network)
+            machine.network = {"NetworkName": "", "NetworkCode": "25001"}
+            self.assertEqual(
+                ModemEngine(machine, self.store).status()["network"]["NetworkName"],
+                "MTS",
+            )
+            machine.network = {"NetworkName": None, "NetworkCode": "25099"}
+            self.assertEqual(
+                ModemEngine(machine, self.store).status()["network"]["NetworkName"],
+                "Beeline",
+            )
 
 
 if __name__ == "__main__":
