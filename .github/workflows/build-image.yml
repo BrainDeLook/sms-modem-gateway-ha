@@ -1,0 +1,69 @@
+name: Build SMS Modem Gateway images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check add-on metadata
+        uses: frenck/action-addon-linter@v2
+        with:
+          path: ./sms-modem-gateway
+      - name: Run Python tests
+        working-directory: sms-modem-gateway
+        run: python3 -m unittest discover -s tests -v
+
+  build:
+    needs: validate
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and publish image
+        uses: home-assistant/builder/actions/build-image@2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          context: ./sms-modem-gateway
+          file: ./sms-modem-gateway/Dockerfile
+          image: ghcr.io/braindelook/sms-modem-gateway-${{ matrix.arch }}
+          image-tags: 0.1.2b2
+          version: 0.1.2b2
+          push: "true"
+          cosign: "false"
+          cache-gha: "false"
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-base:3.19
+      - name: Verify anonymous GHCR manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="braindelook/sms-modem-gateway-${{ matrix.arch }}"
+          status=""
+          for attempt in $(seq 1 12); do
+            token="$(curl -fsS "https://ghcr.io/token?scope=repository:${image}:pull&service=ghcr.io" | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')"
+            status="$(curl -sS -o /dev/null -w '%{http_code}' -I \
+              -H "Authorization: Bearer ${token}" \
+              -H 'Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json' \
+              "https://ghcr.io/v2/${image}/manifests/0.1.2b2")"
+            if [ "$status" = 200 ]; then break; fi
+            sleep 5
+          done
+          echo "Anonymous GHCR manifest status: $status"
+          test "$status" = 200

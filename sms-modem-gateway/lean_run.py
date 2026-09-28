@@ -17,7 +17,7 @@ from lean_store import MessageStore
 from support import init_state_machine
 
 
-VERSION = "0.1.2b1"
+VERSION = "0.1.2b2"
 OPTIONS_PATH = Path("/data/options.json")
 DATABASE_PATH = Path("/data/messages.db")
 

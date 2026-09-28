@@ -1,10 +1,11 @@
 {
   "name": "SMS Modem Gateway",
-  "version": "0.1.2b1",
+  "version": "0.1.2b2",
   "slug": "sms_modem_gateway_lean",
   "description": "Reliable REST SMS gateway with durable multipart assembly",
   "startup": "services",
   "arch": ["amd64", "aarch64"],
+  "image": "ghcr.io/braindelook/sms-modem-gateway-{arch}",
   "panel_icon": "mdi:cellphone-message",
   "url": "https://github.com/BrainDeLook/sms-modem-gateway-ha/tree/main/sms-modem-gateway",
   "homeassistant": "2024.1.0",
