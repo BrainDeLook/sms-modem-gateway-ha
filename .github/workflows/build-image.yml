@@ -42,8 +42,10 @@ jobs:
           context: ./sms-modem-gateway
           file: ./sms-modem-gateway/Dockerfile
           image: ghcr.io/braindelook/sms-modem-gateway-${{ matrix.arch }}
-          image-tags: 0.1.2b2
-          version: 0.1.2b2
+          image-tags: |
+            0.1.2
+            latest
+          version: 0.1.2
           push: "true"
           cosign: "false"
           cache-gha: "false"
@@ -61,7 +63,7 @@ jobs:
             status="$(curl -sS -o /dev/null -w '%{http_code}' -I \
               -H "Authorization: Bearer ${token}" \
               -H 'Accept: application/vnd.oci.image.index.v1+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.docker.distribution.manifest.v2+json' \
-              "https://ghcr.io/v2/${image}/manifests/0.1.2b2")"
+              "https://ghcr.io/v2/${image}/manifests/0.1.2")"
             if [ "$status" = 200 ]; then break; fi
             sleep 5
           done

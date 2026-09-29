@@ -1,6 +1,6 @@
 {
   "name": "SMS Modem Gateway",
-  "version": "0.1.2b2",
+  "version": "0.1.2",
   "slug": "sms_modem_gateway_lean",
   "description": "Reliable REST SMS gateway with durable multipart assembly",
   "startup": "services",

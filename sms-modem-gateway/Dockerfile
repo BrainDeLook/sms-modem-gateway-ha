@@ -49,7 +49,7 @@ LABEL \
     io.hass.name="SMS Modem Gateway" \
     io.hass.description="Minimal durable REST gateway for USB GSM modems" \
     io.hass.type="addon" \
-    io.hass.version="0.1.2b2" \
+    io.hass.version="0.1.2" \
     org.opencontainers.image.source="https://github.com/BrainDeLook/sms-modem-gateway-ha" \
     maintainer="BrainDeLook"
 
